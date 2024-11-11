@@ -1,0 +1,66 @@
+# Dipendenze Node
+node_modules/
+# Output della build
+dist/
+build/
+
+# Ambiente e configurazioni
+.env
+.env.local
+.env.*.local
+
+# Logs e report di crash
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache npm e Yarn
+.npm
+.yarn/
+.pnp.*
+.pnp.js
+
+# Sistemi di cache vari
+.cache/
+.tmp/
+
+# Directory di sistema
+.DS_Store
+Thumbs.db
+
+# Configurazioni editor specifici
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+# Output test e report
+test-results/
+junit/
+.tap/
+*.tap
+nyc_output/
+
+# Debug e profiling
+debug/
+*.pid
+*.pid.lock
+
+# Archivi temporanei
+*.gz
+*.zip
+
+# Output di PM2 per gestione processi
+pids/
+logs/
+pids/
+*.pid
+
+# Modifiche generate durante il deploy
+.surge/
+.deploy
