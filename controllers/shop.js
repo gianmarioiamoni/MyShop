@@ -2,36 +2,45 @@ const Product = require('../models/product');
 const Cart = require('../models/cart');
 
 
-exports.getProducts = (req, res, next) => {
-    Product.fetchAll((products) => {
+exports.getProducts = async (req, res, next) => {
+    try {
+        const products = await Product.fetchAll();
         res.render('shop/product-list', {
             prods: products,
             pageTitle: 'All Products',
             path: '/products',
         }); 
-    });
+    } catch (err) {
+        console.log(err);
+    }
 };
 
-exports.getProductById = (req, res, next) => {
+exports.getProductById = async (req, res, next) => {
     const prodId = req.params.productId;
 
-    Product.findById(prodId, (product) => {
+    try {
+        const product = await Product.findById(prodId);
         res.render('shop/product-detail', {
             product: product,
             pageTitle: product.title,
             path: `/products`, // highlight "products" in navigation
         }); 
-    });
+    } catch (err) {
+        console.log(err);
+    }
 };
 
-exports.getIndex = (req, res, next) => {
-    Product.fetchAll((products) => {
+exports.getIndex = async (req, res, next) => {
+    try {
+        const products = await Product.fetchAll();
         res.render('shop/index', {
             prods: products,
-            pageTitle: 'Shop',
+            pageTitle: 'My Shop',
             path: '/',
-        }); 
-    });
+        });
+    } catch (err) {
+        console.log(err);
+    }
 };
 
 exports.getCart = (req, res, next) => {
@@ -39,7 +48,7 @@ exports.getCart = (req, res, next) => {
         Product.fetchAll(products => {
             const cartProducts = [];
             for (let product of products) {
-                const cartProduct = cart.products.find(prod => prod.id === product.id);
+                const cartProduct = cart.products.find(prod => prod.id === product._id);
                 if (cartProduct) {
                     cartProducts.push({productData: product, qty: cartProduct.qty})
                 }

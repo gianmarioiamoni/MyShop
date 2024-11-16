@@ -26,8 +26,8 @@
                     </div>
 
                     <% if (editing) { %>
-                        <!-- hidden input to pass product.id to the body of the POST request -->
-                        <input type="hidden" name="productId" value="<%= product.id %>" />
+                        <!-- hidden input to pass product._id to the body of the POST request -->
+                        <input type="hidden" name="productId" value="<%= product._id %>" />
                     <% } %>
 
                     <button class="btn" type="submit">

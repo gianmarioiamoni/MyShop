@@ -7,6 +7,11 @@ const errorController = require('./controllers/error');
 
 const app = express();
 
+const dotenv = require('dotenv');
+dotenv.config();
+
+const { mongoConnect } = require('./utils/database');
+
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
@@ -22,7 +27,17 @@ app.use(shopRoutes);
 // route for 404 error page
 app.use(errorController.get404);
 
+const connect = async () => {
+    try {
+        await mongoConnect();
 
-app.listen(3300, () => {
-    console.log('Server is running on port 3300');
-});
+        app.listen(3300, () => {
+            console.log('Server is running on port 3300');
+        });
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+connect();
+    

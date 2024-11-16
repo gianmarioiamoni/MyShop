@@ -1,7 +1,7 @@
 <div class="card__actions">
     <form action="/cart" method="POST">
-        <!-- Hidden input to pass product.id to the body of the POST request -->
-        <input type="hidden" name="productId" value="<%= product.id %>" />
+        <!-- Hidden input to pass product._id to the body of the POST request -->
+        <input type="hidden" name="productId" value="<%= product._id %>" />
         <button class="btn" type="submit">Add to Cart</button>
     </form>
 </div>
