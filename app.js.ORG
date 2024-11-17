@@ -1,0 +1,59 @@
+const path = require('path');
+
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const dotenv = require('dotenv');
+dotenv.config();
+
+const errorController = require('./controllers/error');
+const { mongoConnect } = require('./utils/database'); 
+const User = require('./models/user');
+
+
+const app = express();
+
+app.set('view engine', 'ejs');
+app.set('views', 'views');
+
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
+
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(async (req, res, next) => {
+  // find the existing user
+  try {
+    const user = User.findOne();
+    req.user = new User(user.name, user.email, user.cart, user._id);
+    console.log("app() - req.user:", req.user);
+    next();
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.use('/admin', adminRoutes);
+app.use(shopRoutes);
+
+app.use(errorController.get404);
+
+// mongoConnect(() => {
+//   app.listen(3300, () => {
+//     console.log('Server is running on port 3300');
+//   });
+// });
+
+const connect = async () => {
+  try {
+    await mongoConnect();
+    app.listen(3300, () => {
+      console.log('Server is running on port 3300');
+    });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+connect();
