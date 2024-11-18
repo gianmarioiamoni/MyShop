@@ -52,7 +52,13 @@ exports.postEditProduct = async (req, res, next) => {
   const { prodId, title, imageUrl, price, description } = req.body;
 
   const product = await Product.findById(prodId);
-  // assign new values
+
+  // Check if the product belong to the logged user
+  if (product.userId.toString() !== req.user._id.toString()) {
+    return res.redirect('/');
+  }
+
+  // assign new values to the edited product
   product.title = title;
   product.price = price;
   product.description = description;
@@ -67,7 +73,8 @@ exports.postEditProduct = async (req, res, next) => {
 
 exports.getProducts = async (req, res, next) => {
   try {
-    const products = await Product.find()//.populate('userId');
+    // retrieve only products of the user
+    const products = await Product.find({ userId: req.user._id })//.populate('userId');
     res.render('admin/products', {
       prods: products,
       pageTitle: 'Admin Products',
@@ -82,8 +89,11 @@ exports.postDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
   
   try {
-    await Product.findByIdAndRemove(prodId);
-    console.log('PRODUCT DELETED');
+    // delete the product only if it belongs to the user
+    const product = await Product.deleteOne({_id: prodId, userId: req.user._id});
+    if (!product) {
+      console.log("You are not allowed to delete the product")
+    }
     res.redirect('/admin/products');
   } catch (err) {
     console.log(err);
