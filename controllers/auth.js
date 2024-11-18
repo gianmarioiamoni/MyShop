@@ -1,13 +1,19 @@
 const bcrypt = require('bcryptjs');
 
 const User = require('../models/user');
+const getMessage = require('../util/getMessage');
 
 exports.getLogin = async (req, res, next) => {
-    
+    // let messageArr = req.flash('error');
+    // let message = null;
+    // if (messageArr.length > 0) {
+    //     message = messageArr[0];
+    // }
+
     res.render('auth/login', {
         path: '/login',
         pageTitle: 'Login',
-        isAuthenticated: false 
+        errorMessage: getMessage(req, 'error'), // error is the key in req.flash()
     });
 };
 
@@ -15,21 +21,22 @@ exports.getSignup = async (req, res, next) => {
     res.render('auth/signup', {
         path: '/signup',
         pageTitle: 'Signup',
-        isAuthenticated: false 
+        errorMessage: getMessage(req, 'error')
     });
 };
 
 
 exports.postLogin = async (req, res, next) => {
     const { email, password } = req.body;
-
     try {
         const user = await User.findOne({ email: email });
         if (!user) {
+            req.flash('error', 'Invalid email or password.');
             return res.redirect('/login');
         }
         const isEqual = await bcrypt.compare(password, user.password);
         if (!isEqual) {
+            req.flash('error', 'Invalid email or password.');
             return res.redirect('/login');
         }
         // The user is authenticated: update session
@@ -49,6 +56,7 @@ exports.postSignup = async (req, res, next) => {
     try {
         const user = await User.findOne({ email: email });
         if (user) {
+            req.flash('error', 'Email already existing.');
             return res.redirect('/signup');
         }
         const hashedPassword = await bcrypt.hash(password, 12);

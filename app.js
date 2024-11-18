@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
+const flash = require('connect-flash');
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
@@ -42,14 +43,12 @@ app.use(session({
   saveUninitialized: false,
   store: store
 }));
-
 app.use(crsfProtection);
-
+app.use(flash());
 app.use(async (req, res, next) => {
   if (!req.session.user) {
     return next();
   }
-
   try {
     const user = await User.findById(req.session.user._id);
     req.user = user;
@@ -58,10 +57,9 @@ app.use(async (req, res, next) => {
     console.log(err);
   }
 });
-
 // Authentication and CSRF protection
 app.use((req, res, next) => {
-  // res.locals set local variables that will be passed to the views
+  // res.locals stores local variables that will be passed to the views
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken();
   next();
