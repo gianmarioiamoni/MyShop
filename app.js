@@ -3,11 +3,15 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const MongoDBStore = require('connect-mongodb-session')(session);
 
 const errorController = require('./controllers/error');
 const User = require('./models/user');
 
 const app = express();
+
+
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -19,21 +23,37 @@ const authRoutes = require('./routes/auth');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const DB_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017';
-console.log("DB_URL: ", DB_URL);
+const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
+console.log("DB_URI: ", DB_URI);
 
 const PORT = process.env.PORT || 3300;
 
+const store = new MongoDBStore({
+  uri: DB_URI,
+  collection: 'sessions'
+});
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(session({
+  secret: 'my secret',
+  resave: false,
+  saveUninitialized: false,
+  store: store
+}));
 
-app.use((req, res, next) => {
-  User.findById('67392f1ff99c63cf06327c1e')
-    .then(user => {
-      req.user = user;
-      next();
-    })
-    .catch(err => console.log(err));
+app.use(async (req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+
+  try {
+    const user = await User.findById(req.session.user._id);
+    req.user = user;
+    next();
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 app.use('/admin', adminRoutes);
@@ -44,7 +64,7 @@ app.use(errorController.get404);
 
 const connect = async () => {
   try {
-    await mongoose.connect(DB_URL);
+    await mongoose.connect(DB_URI);
     console.log('Connected to MongoDB');
 
     User.findOne().then(user => {
