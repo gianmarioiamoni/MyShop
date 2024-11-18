@@ -18,12 +18,12 @@ const crsfProtection = csrf();
 app.set('view engine', 'ejs');
 app.set('views', 'views');
 
+const dotenv = require('dotenv');
+dotenv.config();
+
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
-
-const dotenv = require('dotenv');
-dotenv.config();
 
 const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 console.log("DB_URI: ", DB_URI);
