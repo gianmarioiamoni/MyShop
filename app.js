@@ -67,19 +67,6 @@ const connect = async () => {
     await mongoose.connect(DB_URI);
     console.log('Connected to MongoDB');
 
-    User.findOne().then(user => {
-      if (!user) {
-        const user = new User({
-          name: 'gianma67',
-          email: 'gianma67@gmail.com',
-          cart: {
-            items: []
-          }
-        });
-        user.save();
-      }
-    });
-
     app.listen(PORT,
       () => console.log(`Server started on port ${PORT}`));
   } catch (err) {
