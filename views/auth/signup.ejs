@@ -20,6 +20,8 @@
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" name="confirmPassword" id="confirmPassword">
             </div>
+            <!-- Send csrf token to the backend with the logout request -->
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
             <button class="btn" type="submit">Signup</button>
         </form>
     </main>

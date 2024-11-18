@@ -1,4 +1,6 @@
 <form action="/cart" method="post">
+    <!-- Send csrf token to the backend with the logout request -->
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>" />
     <button class="btn" type="submit">Add to Cart</button>
     <input type="hidden" name="productId" value="<%= product._id %>">
 </form>
