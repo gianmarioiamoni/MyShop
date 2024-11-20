@@ -45,6 +45,7 @@ app.use(session({
 }));
 app.use(crsfProtection);
 app.use(flash());
+// set current user middleware
 app.use(async (req, res, next) => {
   if (!req.session.user) {
     return next();
@@ -52,16 +53,19 @@ app.use(async (req, res, next) => {
   try {
     const user = await User.findById(req.session.user._id);
     req.user = user;
+    console.log("*** App.js - req.user: ", req.user);
     next();
   } catch (err) {
     console.log(err);
   }
 });
-// Authentication and CSRF protection
+// Authentication and CSRF protection middleware
 app.use((req, res, next) => {
   // res.locals stores local variables that will be passed to the views
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken();
+  console.log("*** App.js - isAuthenticated: ", res.locals.isAuthenticated);
+  console.log("*** App.js - csrfToken: ", res.locals.csrfToken);
   next();
 });
 
