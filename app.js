@@ -8,64 +8,60 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 const csrf = require('csurf');
 const flash = require('connect-flash');
 
-const errorController = require('./controllers/error');
-const User = require('./models/user');
-
-const app = express();
-
-const crsfProtection = csrf();
-
-app.set('view engine', 'ejs');
-app.set('views', 'views');
-
 const dotenv = require('dotenv');
 dotenv.config();
 
-const adminRoutes = require('./routes/admin');
-const shopRoutes = require('./routes/shop');
-const authRoutes = require('./routes/auth');
+const errorController = require('./controllers/error');
+const User = require('./models/user');
 
 const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 console.log("DB_URI: ", DB_URI);
 
 const PORT = process.env.PORT || 3300;
 
+const app = express();
 const store = new MongoDBStore({
   uri: DB_URI,
   collection: 'sessions'
 });
+const csrfProtection = csrf();
+
+app.set('view engine', 'ejs');
+app.set('views', 'views');
+
+const adminRoutes = require('./routes/admin');
+const shopRoutes = require('./routes/shop');
+const authRoutes = require('./routes/auth');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(session({
-  secret: 'my secret',
-  resave: false,
-  saveUninitialized: false,
-  store: store
-}));
-app.use(crsfProtection);
+app.use(
+  session({
+    secret: 'my secret',
+    resave: false,
+    saveUninitialized: false,
+    store: store
+  })
+);
+app.use(csrfProtection);
 app.use(flash());
-// set current user middleware
-app.use(async (req, res, next) => {
+
+app.use(async(req, res, next) => {
   if (!req.session.user) {
     return next();
   }
   try {
     const user = await User.findById(req.session.user._id);
     req.user = user;
-    console.log("*** App.js - req.user: ", req.user);
     next();
-  } catch (err) {
+  } catch (err) { 
     console.log(err);
   }
 });
-// Authentication and CSRF protection middleware
+
 app.use((req, res, next) => {
-  // res.locals stores local variables that will be passed to the views
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken();
-  console.log("*** App.js - isAuthenticated: ", res.locals.isAuthenticated);
-  console.log("*** App.js - csrfToken: ", res.locals.csrfToken);
   next();
 });
 
@@ -88,3 +84,4 @@ const connect = async () => {
 };
 
 connect();
+
