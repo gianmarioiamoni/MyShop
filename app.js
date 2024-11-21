@@ -46,30 +46,47 @@ app.use(
 app.use(csrfProtection);
 app.use(flash());
 
-app.use(async(req, res, next) => {
-  if (!req.session.user) {
-    return next();
-  }
-  try {
-    const user = await User.findById(req.session.user._id);
-    req.user = user;
-    next();
-  } catch (err) { 
-    console.log(err);
-  }
-});
-
+// CSRF Token setting
+// To be done before anything can go wrong
 app.use((req, res, next) => {
   res.locals.isAuthenticated = req.session.isLoggedIn;
   res.locals.csrfToken = req.csrfToken();
   next();
 });
 
+app.use(async(req, res, next) => {
+  if (!req.session.user) {
+    return next();
+  }
+  try {
+    if (!user) {
+      return next();
+    }
+    const user = await User.findById(req.session.user._id);
+    req.user = user;
+    next();
+  } catch (err) { 
+    next(new Error(err));
+  }
+});
+
+
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+app.get('/500', errorController.get500);
+
 app.use(errorController.get404);
+
+// Error handling middleware
+app.use((error, req, res, next) => {
+  res.status(500).render('500', {
+    pageTitle: 'Error!',
+    path: '/500',
+    isAuthenticated: req.session.isLoggedIn
+  });
+});
 
 const connect = async () => {
   try {

@@ -13,6 +13,7 @@ const loginValidation = (req, res, next) => {
 }
 
 const signupValidation = (req, res, next) => {
+    console.log("**** signupValidation")
     check('email')
         .isEmail()
         .withMessage('Please enter a valid email.')

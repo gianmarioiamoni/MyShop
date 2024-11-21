@@ -115,8 +115,9 @@ exports.postLogin = async (req, res, next) => {
     });
 
   } catch (err) {
-    console.log(err);
-    res.redirect('/login');
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -151,8 +152,9 @@ exports.postSignup = async (req, res, next) => {
     await user.save();
     res.redirect('/login');
   } catch (err) {
-    console.log(err);
-    next(err); // Passa l'errore al middleware globale di gestione degli errori, se presente.
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -207,8 +209,9 @@ exports.postReset = async (req, res, next) => {
       `
     });
   } catch (err) {
-    console.log(err);
-    next(err); // Passa l'errore al middleware di gestione degli errori
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -238,8 +241,9 @@ exports.getNewPassword = async (req, res, next) => {
       passwordToken: token
     });
   } catch (err) {
-    console.log(err);
-    next(err); // Passa l'errore al middleware globale di gestione degli errori
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
 
@@ -271,7 +275,8 @@ exports.postNewPassword = async (req, res, next) => {
 
     res.redirect('/login');
   } catch (err) {
-    console.log(err);
-    next(err); // Passa l'errore al middleware globale di gestione degli errori
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
   }
 };
