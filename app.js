@@ -59,9 +59,6 @@ app.use(async(req, res, next) => {
     return next();
   }
   try {
-    if (!user) {
-      return next();
-    }
     const user = await User.findById(req.session.user._id);
     req.user = user;
     next();
@@ -70,7 +67,7 @@ app.use(async(req, res, next) => {
   }
 });
 
-
+// Routes registration
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
@@ -81,6 +78,7 @@ app.use(errorController.get404);
 
 // Error handling middleware
 app.use((error, req, res, next) => {
+  console.log("Error middleware - Error: ", error);
   res.status(500).render('500', {
     pageTitle: 'Error!',
     path: '/500',

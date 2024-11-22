@@ -62,6 +62,7 @@ exports.postLogin = async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
 
+  // Input validation
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(422).render('auth/login', {
@@ -77,6 +78,7 @@ exports.postLogin = async (req, res, next) => {
   }
 
   try {
+    // Check if user exists
     const user = await User.findOne({ email: email });
     if (!user) {
       return res.status(422).render('auth/login', {
@@ -90,7 +92,7 @@ exports.postLogin = async (req, res, next) => {
         validationErrors: []
       });
     }
-
+    // Check if password is correct
     const doMatch = await bcrypt.compare(password, user.password);
     if (doMatch) {
       req.session.isLoggedIn = true;
@@ -103,6 +105,7 @@ exports.postLogin = async (req, res, next) => {
       });
     }
 
+    // Login is invalid: rerender login page with error message
     return res.status(422).render('auth/login', {
       path: '/login',
       pageTitle: 'Login',
@@ -128,7 +131,6 @@ exports.postSignup = async (req, res, next) => {
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.log(errors.array());
     return res.status(422).render('auth/signup', {
       path: '/signup',
       pageTitle: 'Signup',
@@ -161,7 +163,6 @@ exports.postSignup = async (req, res, next) => {
 
 exports.postLogout = (req, res, next) => {
   req.session.destroy(err => {
-    console.log(err);
     res.redirect('/');
   });
 };
