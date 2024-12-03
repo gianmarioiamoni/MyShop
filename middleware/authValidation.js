@@ -1,10 +1,12 @@
 const { check, body } = require('express-validator');
+const User = require('../models/user');
 
 exports.loginValidation = [
     body('email')
         .isEmail()
         .withMessage('Please enter a valid email address.')
-        .normalizeEmail(),
+    // .normalizeEmail(),
+    ,
     body('password', 'Password has to be valid.')
         .isLength({ min: 5 })
         .isAlphanumeric()
@@ -20,8 +22,8 @@ exports.signupValidation = [
             if (userDoc) {
                 throw new Error('E-Mail exists already, please pick a different one.');
             }
-        })
-        .normalizeEmail(),
+        }),
+        // .normalizeEmail(),
     body(
         'password',
         'Please enter a password with only numbers and text and at least 5 characters.'

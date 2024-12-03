@@ -20,8 +20,6 @@ router.post('/add-product',
     body('title', 'Title should be at least 3 characters long!')
         .isLength({ min: 3 })
         .trim(),
-    body('imageUrl', 'Please enter a valid image URL.')
-        .isURL(),
     body('price', 'Please enter a valid price.')
         .isFloat(),
     body('description', 'Description should be at least 5 characters long!')
@@ -35,8 +33,6 @@ router.get('/edit-product/:productId',
     body('title', 'Title should be at least 3 characters long!')
         .isLength({ min: 3 })
         .trim(),
-    body('imageUrl', 'Please enter a valid image URL.')
-        .isURL(),
     body('price', 'Please enter a valid price.')
         .isFloat(),
     body('description', 'Description should be at least 5 characters long!')
@@ -45,7 +41,18 @@ router.get('/edit-product/:productId',
     isAuth,
     adminController.getEditProduct);
 
-router.post('/edit-product', isAuth, adminController.postEditProduct);
+router.post('/edit-product',
+    // Validation
+    body('title', 'Title should be at least 3 characters long!')
+        .isLength({ min: 3 })
+        .trim(),
+    body('price', 'Please enter a valid price.')
+        .isFloat(),
+    body('description', 'Description should be at least 5 characters long!')
+        .isLength({ min: 5 })
+        .trim(),
+    isAuth,
+    adminController.postEditProduct);
 
 router.post('/delete-product', isAuth, adminController.postDeleteProduct);
 

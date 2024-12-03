@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const Product = require('../models/product');
 
+const fileHelper = require('../util/file');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -14,8 +15,25 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = async (req, res, next) => {
-  const { title, imageUrl, price, description } = req.body;
+  const { title, price, description } = req.body;
+  const image = req.file; // from multer
   
+  if (!image) {
+    return res.status(422).render('admin/edit-product', {
+      pageTitle: 'Add Product',
+      path: '/admin/add-product',
+      editing: false,
+      hasError: true,
+      product: {
+        title,
+        price,
+        description
+      },
+      errorMessage: 'Attached file is not an image.',
+      validationErrors: []
+    });
+  }
+
   // validation
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -26,7 +44,6 @@ exports.postAddProduct = async (req, res, next) => {
       hasError: true,
       product: {
         title,
-        imageUrl,
         price,
         description
       },
@@ -34,6 +51,8 @@ exports.postAddProduct = async (req, res, next) => {
       validationErrors: errors.array()
     });
   }
+
+  const imageUrl = image.path;
 
   const product = new Product({
     title: title,
@@ -82,8 +101,9 @@ exports.getEditProduct = async (req, res, next) => {
 };
 
 exports.postEditProduct = async (req, res, next) => {
-  const { prodId, title, imageUrl, price, description } = req.body;
-
+  const { prodId, title, price, description } = req.body;
+  const image = req.file;
+  
   // validation
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -94,7 +114,6 @@ exports.postEditProduct = async (req, res, next) => {
       hasError: true,
       product: {
         title,
-        imageUrl,
         price,
         description,
         _id: prodId
@@ -115,7 +134,13 @@ exports.postEditProduct = async (req, res, next) => {
   product.title = title;
   product.price = price;
   product.description = description;
-  product.imageUrl = imageUrl;
+
+  // Update image field only if we selected a new image
+  if (image) {
+    fileHelper.deleteFile(product.imageUrl);
+    product.imageUrl = image.path;
+  }
+
   try {
     await product.save();
     res.redirect('/admin/products');
@@ -146,12 +171,16 @@ exports.postDeleteProduct = async (req, res, next) => {
   const prodId = req.body.productId;
   
   try {
-    // delete the product only if it belongs to the user
-    const product = await Product.deleteOne({_id: prodId, userId: req.user._id});
+    // delete product image
+    const product = await Product.findById(prodId);
     if (!product) {
-      console.log("You are not allowed to delete the product")
+      return next(new Error('Product not found'));
     }
+    fileHelper.deleteFile(product.imageUrl);
+    // delete the product only if it belongs to the user
+    const deletedProduct = await Product.deleteOne({_id: prodId, userId: req.user._id});
     res.redirect('/admin/products');
+    return deletedProduct;
   } catch (err) {
     const error = new Error(err);
     error.httpStatusCode = 500;
