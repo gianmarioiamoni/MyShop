@@ -29,16 +29,7 @@
                     value="<% if (editing || hasError) { %><%= product.title %><% } %>"
                 >
             </div>
-            <!-- <div class="form-control">
-                <label for="imageUrl">Image URL</label>
-                <input 
-                    class="<%= validationErrors.find(e => e.param === 'imageUrl') ? 'invalid' : '' %>" 
-                    type="text" 
-                    name="imageUrl" 
-                    id="imageUrl" 
-                    value="<% if (editing || hasError) { %><%= product.imageUrl %><% } %>"
-                >
-            </div> -->
+            
             <div class="form-control">
                 <label for="image">Image</label>
                 <input 
@@ -64,7 +55,7 @@
                     class="<%= validationErrors.find(e => e.param === 'description') ? 'invalid' : '' %>" 
                     name="description" 
                     id="description" 
-                    rows="5"><% if (editing || hasError) { %><%= product.description %><% } %>
+                    rows="5"><% if (editing || hasError) { %><%= product.description  %><% } else { %><%=''%><% } %>
                 </textarea>
             </div>
             <% if (editing) { %>

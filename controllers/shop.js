@@ -4,16 +4,32 @@ const Order = require('../models/order');
 const fs = require('fs');
 const path = require('path');
 
-const PDFDoc = require('pdfkit');
+const PDFDocument = require('pdfkit');
+
+const ITEMS_PER_PAGE = 2;
 
 exports.getProducts = async (req, res, next) => {
-  
+  const page = +req.query.page || 1;
+  let totalItems = 0;
+
   try {
-    const products = await Product.find();
+    // Pagination
+    totalItems = await Product.countDocuments();
+    const products = await Product.find()
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE);
+
     res.render('shop/product-list', {
       prods: products,
-      pageTitle: 'All Products',
+      pageTitle: 'Products',
       path: '/products',
+      totalProducts: totalItems,
+      currentPage: page,
+      hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+      hasPreviousPage: page > 1,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
     });
   } catch (err) {
     const error = new Error(err);
@@ -40,12 +56,27 @@ exports.getProduct = async (req, res, next) => {
 };
 
 exports.getIndex = async (req, res, next) => {
+  const page = +req.query.page || 1;
+  let totalItems = 0;
+  
   try {
-    const products = await Product.find();
+    // Pagination
+    totalItems= await Product.countDocuments();
+    const products = await Product.find()
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE);
+    
     res.render('shop/index', {
       prods: products,
       pageTitle: 'Shop',
       path: '/',
+      totalProducts: totalItems,
+      currentPage: page,
+      hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+      hasPreviousPage: page > 1,
+      nextPage: page + 1,
+      previousPage: page - 1,
+      lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
     });
   } catch (err) { 
     const error = new Error(err);
@@ -153,19 +184,29 @@ exports.getInvoice = async (req, res, next) => {
     if (!order) {
       return next(new Error('No order found.'));
     }
+
     if (order.user.userId.toString() !== req.user._id.toString()) {
       return next(new Error('Unauthorized'));
     }
+
     const invoiceName = 'invoice-' + orderId + '.pdf';
     const invoicePath = path.join('data', 'invoices', invoiceName);
-    
-    const pdfDoc = new PDFDoc();
+
+    const pdfDoc = new PDFDocument();
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'inline; filename="' + invoiceName + '"'
+    );
     pdfDoc.pipe(fs.createWriteStream(invoicePath));
     pdfDoc.pipe(res);
+
     pdfDoc.fontSize(26).text('Invoice', {
       underline: true
     });
     pdfDoc.text('-----------------------');
+
     let totalPrice = 0;
     order.products.forEach(prod => {
       totalPrice += prod.quantity * prod.product.price;
@@ -173,22 +214,17 @@ exports.getInvoice = async (req, res, next) => {
         .fontSize(14)
         .text(
           prod.product.title +
-            ' - ' +
-            prod.quantity +
-            ' x ' +
-            '$' +
-            prod.product.price
+          ' - ' +
+          prod.quantity +
+          ' x ' +
+          '$' +
+          prod.product.price
         );
     });
     pdfDoc.text('---');
     pdfDoc.fontSize(20).text('Total Price: $' + totalPrice);
+
     pdfDoc.end();
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader(
-      'Content-Disposition',
-      'inline; filename="' + invoiceName + '"'
-    );
-    return file.pipe(res);
   } catch (err) {
     const error = new Error(err);
     error.httpStatusCode = 500;
