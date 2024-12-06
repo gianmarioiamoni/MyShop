@@ -3,6 +3,7 @@ const Order = require('../models/order');
 
 const fs = require('fs');
 const path = require('path');
+const stripe = require('stripe')(process.env.STRIPE_PRIVATE_KEY);
 
 const PDFDocument = require('pdfkit');
 
@@ -137,6 +138,73 @@ exports.postCartDeleteProduct = async (req, res, next) => {
   }
 };
 
+exports.getCheckout = async (req, res, next) => {
+  let products;
+  let total = 0;
+  try {
+    const user = await req.user.populate('cart.items.productId');
+    products = user.cart.items;
+    total = 0;
+    products.forEach(p => {
+      total += p.quantity * p.productId.price;
+    });
+    
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: products.map(p => {
+        return {
+          quantity: p.quantity,
+          price_data: {
+            currency: 'EUR',
+            unit_amount: p.productId.price * 100,
+            product_data: {
+              name: p.productId.title,
+            }
+          },
+          
+        };
+      }),
+      success_url: `${req.protocol}://${req.get('host') + '/checkout/success'}`,
+      cancel_url: `${req.protocol}://${req.get('host') + '/checkout/cancel'}`,
+    });
+    res.render('shop/checkout', {
+      path: '/checkout',
+      pageTitle: 'Checkout',
+      products: products,
+      totalSum: total,
+      sessionId: session.id 
+    });
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+}
+exports.getCheckoutSuccess = async (req, res, next) => {
+  try {
+    const user = await req.user.populate('cart.items.productId');
+    const products = user.cart.items.map(i => {
+      return { quantity: i.quantity, product: { ...i.productId._doc } };
+    });
+    const order = new Order({
+      user: {
+        email: req.user.email,
+        userId: req.user
+      },
+      products: products
+    });
+    await order.save();
+    await req.user.clearCart();
+
+    res.redirect('/orders');
+  } catch (err) {
+    const error = new Error(err);
+    error.httpStatusCode = 500;
+    return next(error);
+  }
+};
+
 exports.postOrder = async (req, res, next) => {
   try {
     const user = await req.user.populate('cart.items.productId');
@@ -160,6 +228,7 @@ exports.postOrder = async (req, res, next) => {
     return next(error);
   }
 };
+
 
 exports.getOrders = async (req, res, next) => {
   try {
